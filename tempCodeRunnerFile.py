@@ -1,2 +1,2 @@
-
-    y = pd.get_dummies(bank['y'], columns = ['y'], prefix = ['y'], drop_first = True)
+_grid = ridge_params, 
+                          cv = cv, n_jobs = -1)

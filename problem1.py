@@ -3,12 +3,6 @@ import numpy as np
 
 def problem1(fileName):
     data=pd.read_excel(fileName)
-# data.head()
-# data.info()
-# data.shape
-# data.isnull().values.any()
-# data.describe()
-
     X = data.drop(['Y1', 'Y2'], axis=1).values
     y_1= ((data['Y1']).values).reshape(-1, 1)
     y_2= ((data['Y2']).values).reshape(-1, 1)
@@ -20,6 +14,9 @@ def problem1(fileName):
         'min_samples_leaf': [1,2,3],
         'min_samples_split': [2,3],
         'n_estimators': [10,50,100,250,500]
+    }
+    ridge_params={
+        'alpha':[0.001,0.01,0.1, 1.0, 10.0]
     }
     outputs=[y_1,y_2]
     ridge_means=[]
@@ -35,15 +32,10 @@ def problem1(fileName):
             X_test=scaler.transform(X_test)
             from sklearn.model_selection import RepeatedKFold,cross_val_score
             cv=RepeatedKFold(n_splits=10,n_repeats=10,random_state=True)
-            from numpy import mean
-            from numpy import std
-            params=[0.001,0.01,0.1, 1.0, 10.0]
-            for alpha in params:
-                model=Ridge(alpha=alpha)
-                model.fit(X_train,y_train)
-                # print(model.score(X_train,y_train))
-
-            model=Ridge(alpha=0.001)
+            temp_ridge=Ridge()
+            grid_search_ridge=GridSearchCV(estimator = temp_ridge, param_grid = ridge_params, cv = cv, n_jobs = -1)
+            grid_search_ridge.fit(X_train,y_train.ravel())
+            model=Ridge(**grid_search_ridge.best_params_)
             model.fit(X_train,y_train)
             scores_ridge = cross_val_score(model, X_train, y_train,scoring=score, cv=cv)
             ridge_means.append(-scores_ridge.mean())
@@ -51,7 +43,7 @@ def problem1(fileName):
             # print("Ridge","Y",index+1," ",score,"-----",-scores.mean(),scores.std())
             rf = RandomForestRegressor()
             grid_search = GridSearchCV(estimator = rf, param_grid = param_grid, 
-                          cv = 5, n_jobs = -1)
+                          cv = cv, n_jobs = -1)
             grid_search.fit(X_train,y_train.ravel())
             last_model=RandomForestRegressor(**grid_search.best_params_)
             scores_randomforest= cross_val_score(last_model, X_train, y_train.ravel(),scoring=score, cv=cv)
